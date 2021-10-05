@@ -71,8 +71,7 @@ def get_final_accuracy(models: Models, num_loops: int, show=False) -> float:
         models.refresh_model_data()
         model, X_test, y_test = models.get_model_and_test_data()
         predictions = predict(model, X_test)
-        score = get_accuracy_score(y_test, predictions)
-        scores.append(score)
+        scores.append(get_accuracy_score(y_test, predictions))
 
     if show:
         final_accuracy = float(np.mean(scores)) * 100
