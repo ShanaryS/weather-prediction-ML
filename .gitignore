@@ -130,3 +130,7 @@ dmypy.json
 
 # Custom
 test.py
+music.csv
+music-recommender.joblib
+music-recommender.dot
+weather_nyc.csv
