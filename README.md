@@ -1,2 +1,2 @@
 # Weather Prediction w/ ML
-Predict the weather of CT a day in advance using Machine Learning
+Predict the weather of a day in NYC using Machine Learning
