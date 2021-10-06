@@ -1,14 +1,14 @@
 import os.path
+import joblib
 from dataclasses import dataclass
 from datetime import datetime
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import accuracy_score
 from sklearn import tree
-import joblib
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.linear_model import Lasso, ElasticNet, Ridge
-from sklearn.svm import SVR
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
 
 
 @dataclass
@@ -26,8 +26,13 @@ class Models:
     X_test: any = None
     y_test: any = None
 
-    # Stores user date
-    user_date: str = None
+    # Stores user input
+    user_datetime: str = None
+    user_temperature: str = None
+    user_pressure: str = None
+    user_humidity: str = None
+    user_wind_speed: str = None
+    user_wind_direction: str = None
 
     def set_X_y(self, x, y) -> None:
         """Sets the data for X and y"""
@@ -37,79 +42,27 @@ class Models:
         """Gets the model and test data to be used for analysis"""
         return self.model, self.X_test
 
-    def decision_tree_regressor(self) -> None:
-        """ML model of Decision Tree Regression"""
+    def decision_tree_classifier(self) -> None:
+        """ML model of Decision Tree Classifier"""
 
-        self.model_name = 'Decision Tree Regression'
+        self.model_name = 'Decision Tree Classifier'
         X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
 
         if self.train:
-            self.model = DecisionTreeRegressor().fit(X_train, y_train)
+            self.model = DecisionTreeClassifier().fit(X_train, y_train)
         else:
             self.model = joblib.load(os.path.join(
                 'models',
                 f"{self.model_name.lower().replace(' ', '_')}.joblib"))
 
-    def lasso_regressor(self) -> None:
-        """ML model of Lasso regression"""
+    def gaussian_nb(self) -> None:
+        """ML model of GaussianNB"""
 
-        self.model_name = 'Lasso Regression'
+        self.model_name = 'Gaussian Naive Bayes'
         X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
 
         if self.train:
-            self.model = Lasso().fit(X_train, y_train)
-        else:
-            self.model = joblib.load(os.path.join(
-                'models',
-                f"{self.model_name.lower().replace(' ', '_')}.joblib"))
-
-    def elastic_net_regressor(self) -> None:
-        """ML model of ElasticNet regression"""
-
-        self.model_name = 'ElasticNet Regression'
-        X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
-
-        if self.train:
-            self.model = ElasticNet().fit(X_train, y_train)
-        else:
-            self.model = joblib.load(os.path.join(
-                'models',
-                f"{self.model_name.lower().replace(' ', '_')}.joblib"))
-
-    def ridge_regressor(self) -> None:
-        """ML model of Ridge regression"""
-
-        self.model_name = 'Ridge Regression'
-        X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
-
-        if self.train:
-            self.model = Ridge().fit(X_train, y_train)
-        else:
-            self.model = joblib.load(os.path.join(
-                'models',
-                f"{self.model_name.lower().replace(' ', '_')}.joblib"))
-
-    def svr_linear_regressor(self) -> None:
-        """ML model of SVR Linear regression"""
-
-        self.model_name = 'SVR Linear Regression'
-        X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
-
-        if self.train:
-            self.model = SVR(kernel='linear').fit(X_train, y_train)
-        else:
-            self.model = joblib.load(os.path.join(
-                'models',
-                f"{self.model_name.lower().replace(' ', '_')}.joblib"))
-
-    def svr_rbf_regressor(self) -> None:
-        """ML model of SVR RBF regression"""
-
-        self.model_name = 'SVR RBF Regression'
-        X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
-
-        if self.train:
-            self.model = SVR(kernel='rbf').fit(X_train, y_train)
+            self.model = GaussianNB().fit(X_train, y_train)
         else:
             self.model = joblib.load(os.path.join(
                 'models',
@@ -119,24 +72,42 @@ class Models:
 def get_data() -> tuple:
     """Gets the dataset and returns 'X' and 'y' for analysis"""
 
-    weather = pd.read_csv('weather_nyc.csv')
+    Numerics = LabelEncoder()
 
-    # Cleaning data
-    weather['date'].replace('-', '/', regex=True, inplace=True)
-    weather['date'] = weather['date'].apply(
-        lambda x: datetime.strptime(x, '%d/%m/%Y').strftime('%j'))
-    weather['precipitation'].replace('T', '0.0025', inplace=True)
-    weather['snow_fall'].replace('T', '0.025', inplace=True)
-    weather['snow_depth'].replace('T', '0.25', inplace=True)
+    # Independent variables
+    temperature = pd.read_csv(os.path.join('dataset', 'temperature.csv'))
+    pressure = pd.read_csv(os.path.join('dataset', 'pressure.csv'))
+    humidity = pd.read_csv(os.path.join('dataset', 'humidity.csv'))
+    wind_speed = pd.read_csv(os.path.join('dataset', 'wind_speed.csv'))
+    wind_direction = pd.read_csv(os.path.join('dataset', 'wind_direction.csv'))
 
-    # Removing extra columns aside from date (X) and average temperature (y)
-    weather.drop(columns=['maximum_temperature', 'minimum_temperature',
-                          'precipitation', 'snow_fall', 'snow_depth'],
-                 inplace=True)
+    # Dependent variable
+    weather_description = pd.read_csv(
+        os.path.join('dataset', 'weather_description.csv'))
 
-    # Defining independent and dependent variables
-    X = weather.drop(columns=['average_temperature'])
-    y = weather['average_temperature']
+    # Converting datetime to day of year and hour of day
+    # TODO Look into this more. Maybe account for changing years? Maybe not
+    #  since you want to use previous years data a data point for new
+    #  datetime that's being entered.
+    temperature['datetime'] = temperature['datetime'].apply(
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S').strftime('%j-%H'))
+
+    # NYC data
+    nyc = temperature.copy()[['datetime', 'New York']]
+    nyc.rename(columns={'datetime': 'Datetime', 'New York': 'Temperature'},
+               inplace=True)
+    nyc['Pressure'] = pressure['New York']
+    nyc['Humidity'] = humidity['New York']
+    # nyc['Wind Speed'] = wind_speed['New York']
+    # nyc['Wind Direction'] = wind_direction['New York']
+    nyc['Weather Description'] = weather_description['New York']
+    nyc.dropna(inplace=True)
+    nyc['Datetime'] = Numerics.fit_transform(nyc['Datetime'])
+
+    # TODO remove Datetime?
+    X = nyc.drop(columns=['Weather Description'])
+    y = nyc['Weather Description']
+    # y = Numerics.fit_transform(nyc['Weather Description'])
 
     return X, y
 
@@ -146,34 +117,38 @@ def split_data(x, y) -> tuple:
     return train_test_split(x, y, test_size=0.2)
 
 
-def get_accuracy(models: Models, show=False) -> tuple:
+def get_accuracy(models: Models, show=False) -> float:
     """Returns the metrics of the model"""
 
     predictions = models.model.predict(models.X_test)
-    r2 = r2_score(models.y_test, predictions)
-    mean_squared = mean_squared_error(models.y_test, predictions)
+
+    score = accuracy_score(models.y_test, predictions)
 
     if show:
-        print(f"{models.model_name} ~ "
-              f"R^2: {round(r2, 4)} - "
-              f"Mean Squared Error: {round(mean_squared, 4)}")
+        print(f"{models.model_name} ~ Accuracy: {round(score*100, 2)}")
 
-    return r2, mean_squared
+    return score
 
 
 def prediction(models: Models, show=False) -> float:
     """Returns a number from the input date"""
 
-    user_date = datetime.strptime(
-        models.user_date, '%m/%d/%Y').strftime('%j')
+    Numerics = LabelEncoder()
 
-    expected_temp = models.model.predict([[user_date]])[0]
+    user_datetime = datetime.strptime(
+        models.user_datetime, '%m/%d/%Y %H').strftime('%j-%H')
+    user_datetime = Numerics.fit_transform(user_datetime)
+
+    expected_condition = models.model.predict([
+        user_datetime, models.user_temperature, models.user_pressure,
+        models.user_humidity
+    ])[0]
 
     if show:
-        print(f"Expected temperature in NYC on {models.user_date}: "
-              f"{expected_temp}\u00b0F (Using {models.model_name})")
+        print(f"Expected condition in NYC on {models.user_datetime}: "
+              f"{expected_condition.capitalize()} (Using {models.model_name})")
 
-    return expected_temp
+    return expected_condition
 
 
 def export_model(models: Models) -> None:
@@ -206,16 +181,19 @@ def main() -> None:
 
     '''Controls training and saving models'''
     print_accuracy_or_prediction = True
-    models.train = False
-    model_export = False  # Requires model.train = True
+    models.train = True
+    model_export = True  # Requires model.train = True
     model_dot_export = False
 
     # Set ML model and get accuracy with option to print
-    models.decision_tree_regressor()
+    models.decision_tree_classifier()
     if models.train:
         _ = get_accuracy(models, show=print_accuracy_or_prediction)
     else:
-        models.user_date = input('Enter date: ')
+        models.user_datetime = input('Enter datetime (mm/dd/YYYY H): ')
+        models.user_temperature = input('Enter temperature (\u00b0F): ')
+        models.user_pressure = input('Enter pressure (hPa): ')
+        models.user_humidity = input('Enter humidity (0-100): ')
         prediction(models, show=print_accuracy_or_prediction)
     if model_export:
         export_model(models)
