@@ -61,6 +61,11 @@ def get_data() -> tuple:
     weather['snow_fall'].replace('T', '0.025', inplace=True)
     weather['snow_depth'].replace('T', '0.25', inplace=True)
 
+    # Removing extra columns aside from date (X) and average temperature (y)
+    weather.drop(columns=['maximum_temperature', 'minimum_temperature',
+                          'precipitation', 'snow_fall', 'snow_depth'],
+                 inplace=True)
+
     # Defining independent and dependent variables
     X = weather.drop(columns=['average_temperature'])
     y = weather['average_temperature']
@@ -99,8 +104,7 @@ def export_graphviz_dot(models: Models) -> None:
     tree.export_graphviz(
         models.model,
         out_file=f"{models.model_name.lower().replace(' ', '_')}.dot",
-        feature_names=['date', 'maximum_temperature', 'minimum_temperature',
-                       'precipitation', 'snow_fall', 'snow_depth'],
+        feature_names=['date'],
         class_names=sorted(models.y.unique()),
         label='all',
         rounded=True,
@@ -119,7 +123,7 @@ def main() -> None:
     print_accuracy = True
     models.train = False
     model_export = False  # Requires model.train = True
-    model_dot_export = True
+    model_dot_export = False
 
     # Set ML model and get accuracy with option to print
     models.decision_tree_regressor()
