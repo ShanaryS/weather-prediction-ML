@@ -1,6 +1,5 @@
 import os.path
 from dataclasses import dataclass
-from typing import Callable
 from datetime import datetime
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -8,6 +7,8 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn import tree
 import joblib
 from sklearn.tree import DecisionTreeRegressor
+from sklearn.linear_model import Lasso, ElasticNet, Ridge
+from sklearn.svm import SVR
 
 
 @dataclass
@@ -25,8 +26,8 @@ class Models:
     X_test: any = None
     y_test: any = None
 
-    # Stores last used model to refresh. Each model calls after initializing.
-    refresh_model_data: Callable = None
+    # Stores user date
+    user_date: str = None
 
     def set_X_y(self, x, y) -> None:
         """Sets the data for X and y"""
@@ -37,10 +38,9 @@ class Models:
         return self.model, self.X_test
 
     def decision_tree_regressor(self) -> None:
-        """ML model of decision tree regression"""
+        """ML model of Decision Tree Regression"""
 
         self.model_name = 'Decision Tree Regression'
-        self.refresh_model_data = self.decision_tree_regressor
         X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
 
         if self.train:
@@ -48,7 +48,72 @@ class Models:
         else:
             self.model = joblib.load(os.path.join(
                 'models',
-                'decision_tree_regression.joblib'))
+                f"{self.model_name.lower().replace(' ', '_')}.joblib"))
+
+    def lasso_regressor(self) -> None:
+        """ML model of Lasso regression"""
+
+        self.model_name = 'Lasso Regression'
+        X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
+
+        if self.train:
+            self.model = Lasso().fit(X_train, y_train)
+        else:
+            self.model = joblib.load(os.path.join(
+                'models',
+                f"{self.model_name.lower().replace(' ', '_')}.joblib"))
+
+    def elastic_net_regressor(self) -> None:
+        """ML model of ElasticNet regression"""
+
+        self.model_name = 'ElasticNet Regression'
+        X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
+
+        if self.train:
+            self.model = ElasticNet().fit(X_train, y_train)
+        else:
+            self.model = joblib.load(os.path.join(
+                'models',
+                f"{self.model_name.lower().replace(' ', '_')}.joblib"))
+
+    def ridge_regressor(self) -> None:
+        """ML model of Ridge regression"""
+
+        self.model_name = 'Ridge Regression'
+        X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
+
+        if self.train:
+            self.model = Ridge().fit(X_train, y_train)
+        else:
+            self.model = joblib.load(os.path.join(
+                'models',
+                f"{self.model_name.lower().replace(' ', '_')}.joblib"))
+
+    def svr_linear_regressor(self) -> None:
+        """ML model of SVR Linear regression"""
+
+        self.model_name = 'SVR Linear Regression'
+        X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
+
+        if self.train:
+            self.model = SVR(kernel='linear').fit(X_train, y_train)
+        else:
+            self.model = joblib.load(os.path.join(
+                'models',
+                f"{self.model_name.lower().replace(' ', '_')}.joblib"))
+
+    def svr_rbf_regressor(self) -> None:
+        """ML model of SVR RBF regression"""
+
+        self.model_name = 'SVR RBF Regression'
+        X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
+
+        if self.train:
+            self.model = SVR(kernel='rbf').fit(X_train, y_train)
+        else:
+            self.model = joblib.load(os.path.join(
+                'models',
+                f"{self.model_name.lower().replace(' ', '_')}.joblib"))
 
 
 def get_data() -> tuple:
@@ -96,6 +161,21 @@ def get_accuracy(models: Models, show=False) -> tuple:
     return r2, mean_squared
 
 
+def prediction(models: Models, show=False) -> float:
+    """Returns a number from the input date"""
+
+    user_date = datetime.strptime(
+        models.user_date, '%m/%d/%Y').strftime('%j')
+
+    expected_temp = models.model.predict([[user_date]])[0]
+
+    if show:
+        print(f"Expected temperature in NYC on {models.user_date}: "
+              f"{expected_temp}\u00b0F (Using {models.model_name})")
+
+    return expected_temp
+
+
 def export_model(models: Models) -> None:
     """Saves model to disk"""
     joblib.dump(models.model, os.path.join(
@@ -125,14 +205,18 @@ def main() -> None:
     models.set_X_y(X, y)
 
     '''Controls training and saving models'''
-    print_accuracy = True
+    print_accuracy_or_prediction = True
     models.train = False
     model_export = False  # Requires model.train = True
     model_dot_export = False
 
     # Set ML model and get accuracy with option to print
     models.decision_tree_regressor()
-    _ = get_accuracy(models, show=print_accuracy)
+    if models.train:
+        _ = get_accuracy(models, show=print_accuracy_or_prediction)
+    else:
+        models.user_date = input('Enter date: ')
+        prediction(models, show=print_accuracy_or_prediction)
     if model_export:
         export_model(models)
     if model_dot_export:
