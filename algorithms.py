@@ -1,3 +1,4 @@
+import os.path
 from dataclasses import dataclass
 from typing import Callable
 from datetime import datetime
@@ -45,7 +46,9 @@ class Models:
         if self.train:
             self.model = DecisionTreeRegressor().fit(X_train, y_train)
         else:
-            self.model = joblib.load('decision_tree_regression.joblib')
+            self.model = joblib.load(os.path.join(
+                'models',
+                'decision_tree_regression.joblib'))
 
 
 def get_data() -> tuple:
@@ -95,8 +98,10 @@ def get_accuracy(models: Models, show=False) -> tuple:
 
 def export_model(models: Models) -> None:
     """Saves model to disk"""
-    joblib.dump(
-        models.model, f"{models.model_name.lower().replace(' ', '_')}.joblib")
+    joblib.dump(models.model, os.path.join(
+        'models',
+        f"{models.model_name.lower().replace(' ', '_')}.joblib")
+    )
 
 
 def export_graphviz_dot(models: Models) -> None:
