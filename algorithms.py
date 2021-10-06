@@ -1,10 +1,12 @@
 from dataclasses import dataclass
+from typing import Callable
+from datetime import datetime
 import numpy as np
 import pandas as pd
-from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from typing import Callable
+from sklearn.metrics import mean_squared_error, r2_score
+import joblib
+from sklearn.tree import DecisionTreeRegressor
 
 
 @dataclass
@@ -24,26 +26,40 @@ class Models:
     # Stores last used model to refresh. Each model calls after initializing.
     refresh_model_data: Callable = None
 
+    def set_X_y(self, x, y) -> None:
+        """Sets the data for X and y"""
+        self.X, self.y = x, y
+
     def get_model_and_test_data(self) -> tuple:
         """Gets the model and test data to be used for analysis"""
-        return self.model, self.X_test, self.y_test
+        return self.model, self.X_test
 
-    def decision_tree_classifier(self) -> None:
-        """ML model of decision tree classifier"""
+    def decision_tree_regressor(self) -> None:
+        """ML model of decision tree regression"""
 
-        self.model_name = 'Decision Tree Classifier'
-        self.refresh_model_data = self.decision_tree_classifier
+        self.model_name = 'Decision Tree Regression'
+        self.refresh_model_data = self.decision_tree_regressor
 
         X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
-        self.model = DecisionTreeClassifier().fit(X_train, y_train)
+        self.model = DecisionTreeRegressor().fit(X_train, y_train)
 
 
-def data() -> tuple:
+def get_data() -> tuple:
     """Gets the dataset and returns 'X' and 'y' for analysis"""
 
-    music_data = pd.read_csv('music.csv')
-    X = music_data.drop(columns=['genre'])
-    y = music_data['genre']
+    weather = pd.read_csv('weather_nyc.csv')
+
+    # Cleaning data
+    weather['date'].replace('-', '/', regex=True, inplace=True)
+    weather['date'] = weather['date'].apply(
+        lambda x: datetime.strptime(x, '%d/%m/%Y').strftime('%j'))
+    weather['precipitation'].replace('T', '0.0025', inplace=True)
+    weather['snow_fall'].replace('T', '0.025', inplace=True)
+    weather['snow_depth'].replace('T', '0.25', inplace=True)
+
+    # Defining independent and dependent variables
+    X = weather.drop(columns=['average_temperature'])
+    y = weather['average_temperature']
 
     return X, y
 
@@ -53,41 +69,37 @@ def split_data(x, y) -> tuple:
     return train_test_split(x, y, test_size=0.2)
 
 
-def predict(model, x_test) -> list:
+def predict(model: any, x_test) -> list:
     """Returns predictions from the test data compared against model"""
     return model.predict(x_test)
 
 
-def get_accuracy_score(y_test, predictions) -> float:
-    """Gets the accuracy score of the predictions from a model"""
-    return accuracy_score(y_test, predictions)
+def get_accuracy(models: Models, show=False) -> tuple:
+    """Returns the metrics of the model"""
 
-
-def get_final_accuracy(models: Models, num_loops: int, show=False) -> float:
-    """Runs a model multiple times to get it's final accuracy"""
-
-    scores = []
-    for _ in range(num_loops):
-        models.refresh_model_data()
-        model, X_test, y_test = models.get_model_and_test_data()
-        predictions = predict(model, X_test)
-        scores.append(get_accuracy_score(y_test, predictions))
+    predictions = predict(models.model, models.X_test)
+    r2 = r2_score(models.y_test, predictions)
+    mean_squared = mean_squared_error(models.y_test, predictions)
 
     if show:
-        final_accuracy = float(np.mean(scores)) * 100
-        print(f"{models.model_name}: {final_accuracy}%")
+        print(f"{models.model_name} ~ "
+              f"R^2: {round(r2, 3)} - "
+              f"Mean Squared Error: {round(mean_squared, 3)}")
 
-    return float(np.mean(scores)) * 100
+    return r2, mean_squared
 
 
-def main(num_loops=1000) -> None:
-    """Main loop"""
+def main() -> None:
+    """Main function"""
+
     models = Models()
-    models.X, models.y = data()
+    X, y = get_data()
+    models.set_X_y(X, y)
 
-    # Set ML model and get final accuracy with option to print
-    models.decision_tree_classifier()
-    _ = get_final_accuracy(models, num_loops=num_loops, show=True)
+    # Set ML model and get accuracy with option to print
+    models.decision_tree_regressor()
+    _ = get_accuracy(models, show=True)
+    print('...')
 
 
 if __name__ == '__main__':
