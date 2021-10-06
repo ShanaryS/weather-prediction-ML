@@ -1,4 +1,4 @@
-date,TimeEST,TemperatureF,Dew PointF,Humidity,Wind SpeedMPH,Conditions
+Date,TimeEST,TemperatureF,Dew PointF,Humidity,Wind SpeedMPH,Conditions
 2016-01-01,12:51 AM,42.1,25,51,4.6,Overcast
 2016-01-01,1:51 AM,41,25,53,3.5,Overcast
 2016-01-01,2:51 AM,41,26.1,55,4.6,Overcast
