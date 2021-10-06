@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import Callable
 from datetime import datetime
-import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn import tree
 import joblib
 from sklearn.tree import DecisionTreeRegressor
 
@@ -18,6 +18,7 @@ class Models:
     model_name: str = ''
     X: pd.DataFrame = None
     y: pd.DataFrame = None
+    train: bool = False
 
     # Test data used to compare accuracy with
     X_test: any = None
@@ -39,9 +40,12 @@ class Models:
 
         self.model_name = 'Decision Tree Regression'
         self.refresh_model_data = self.decision_tree_regressor
-
         X_train, self.X_test, y_train, self.y_test = split_data(self.X, self.y)
-        self.model = DecisionTreeRegressor().fit(X_train, y_train)
+
+        if self.train:
+            self.model = DecisionTreeRegressor().fit(X_train, y_train)
+        else:
+            self.model = joblib.load('decision_tree_regression.joblib')
 
 
 def get_data() -> tuple:
@@ -69,24 +73,39 @@ def split_data(x, y) -> tuple:
     return train_test_split(x, y, test_size=0.2)
 
 
-def predict(model: any, x_test) -> list:
-    """Returns predictions from the test data compared against model"""
-    return model.predict(x_test)
-
-
 def get_accuracy(models: Models, show=False) -> tuple:
     """Returns the metrics of the model"""
 
-    predictions = predict(models.model, models.X_test)
+    predictions = models.model.predict(models.X_test)
     r2 = r2_score(models.y_test, predictions)
     mean_squared = mean_squared_error(models.y_test, predictions)
 
     if show:
         print(f"{models.model_name} ~ "
-              f"R^2: {round(r2, 3)} - "
-              f"Mean Squared Error: {round(mean_squared, 3)}")
+              f"R^2: {round(r2, 4)} - "
+              f"Mean Squared Error: {round(mean_squared, 4)}")
 
     return r2, mean_squared
+
+
+def export_model(models: Models) -> None:
+    """Saves model to disk"""
+    joblib.dump(
+        models.model, f"{models.model_name.lower().replace(' ', '_')}.joblib")
+
+
+def export_graphviz_dot(models: Models) -> None:
+    """Saves logic visualizer to disk"""
+    tree.export_graphviz(
+        models.model,
+        out_file=f"{models.model_name.lower().replace(' ', '_')}.dot",
+        feature_names=['date', 'maximum_temperature', 'minimum_temperature',
+                       'precipitation', 'snow_fall', 'snow_depth'],
+        class_names=sorted(models.y.unique()),
+        label='all',
+        rounded=True,
+        filled=True
+    )
 
 
 def main() -> None:
@@ -96,10 +115,19 @@ def main() -> None:
     X, y = get_data()
     models.set_X_y(X, y)
 
+    '''Controls training and saving models'''
+    print_accuracy = True
+    models.train = False
+    model_export = False  # Requires model.train = True
+    model_dot_export = True
+
     # Set ML model and get accuracy with option to print
     models.decision_tree_regressor()
-    _ = get_accuracy(models, show=True)
-    print('...')
+    _ = get_accuracy(models, show=print_accuracy)
+    if model_export:
+        export_model(models)
+    if model_dot_export:
+        export_graphviz_dot(models)
 
 
 if __name__ == '__main__':
