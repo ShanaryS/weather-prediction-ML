@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from enum import Enum, unique
 from datetime import datetime
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn import tree
@@ -126,9 +125,7 @@ def read_weather_data() -> tuple:
 
     # Converting datetime to day of year and hour of day
     temperature['datetime'] = temperature['datetime'].apply(
-        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S').strftime('%j-%H'))
-
-    Numerics = LabelEncoder()
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S').strftime('%j-%Y'))
 
     # NYC data
     nyc = temperature.copy()[['datetime', 'New York']]
@@ -138,7 +135,9 @@ def read_weather_data() -> tuple:
     nyc['Wind Direction'] = wind_direction['New York']
     nyc['Weather Description'] = weather_description['New York']
     nyc.dropna(inplace=True)
-    nyc['Datetime'] = Numerics.fit_transform(nyc['Datetime'])
+    nyc.drop_duplicates(subset=['Datetime'], inplace=True)
+    nyc['Datetime'] = nyc['Datetime'].apply(
+        lambda x: datetime.strptime(x, '%j-%Y').strftime('%j'))
 
     X = nyc.drop(columns=['Weather Description'])
     y = nyc['Weather Description'].copy()
@@ -202,11 +201,8 @@ def get_accuracy(models: Models, show=False) -> float:
 def prediction(models: Models, show=False) -> float:
     """Returns a number from the input date"""
 
-    Numerics = LabelEncoder()
-
     user_datetime = datetime.strptime(
-        User.user_datetime, '%m/%d/%Y %H').strftime('%j-%H')
-    user_datetime = Numerics.fit_transform([user_datetime])
+        User.user_datetime, '%m/%d/%Y').strftime('%j')
 
     user_temperature = (User.user_temperature - 32) * (5/9) + 273.15
 
@@ -265,9 +261,10 @@ def main() -> None:
     export = False  # Requires train
 
     if not train:
-        User.user_datetime = input('Enter datetime (mm/dd/YYYY HH): ')
+        User.user_datetime = input('Enter datetime (mm/dd/YYYY): ')
         User.user_temperature = int(input('Enter temperature (\u00b0F): '))
-        User.user_pressure = int(input('Enter pressure (hPa): '))
+        User.user_pressure = int(input('Enter pressure (hPa) '
+                                       '[Typical @ 1015 hPa]: '))
         User.user_wind_direction = int(input('Enter wind direction (0-360): '))
         print()
 
