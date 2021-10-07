@@ -266,7 +266,7 @@ def main() -> None:
         User.user_pressure = int(input('Enter pressure (hPa) '
                                        '[Typical @ 1015 hPa]: '))
         User.user_wind_direction = int(input('Enter wind direction (0-360): '))
-        print()
+    print()
 
     models_clear = Models(condition=Condition.CLEAR_SKIES.value)
     models_rain = Models(condition=Condition.RAIN.value)
@@ -287,9 +287,7 @@ def main() -> None:
     run(models_snow, show=show, train=train, export=export)
     run(models_fog, show=show, train=train, export=export)
 
-    if train:
-        print(f"\n--- Used {models_clear.model_name} for training ---")
-    else:
+    if not train:
         print(f"\n--- Used {models_clear.model_name} for predictions ---")
 
 
