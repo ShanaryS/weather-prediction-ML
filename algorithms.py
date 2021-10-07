@@ -206,13 +206,13 @@ def prediction(models: Models, show=False) -> float:
 
     user_datetime = datetime.strptime(
         User.user_datetime, '%m/%d/%Y %H').strftime('%j-%H')
-    user_datetime = Numerics.fit_transform(user_datetime)
+    user_datetime = Numerics.fit_transform([user_datetime])
 
     user_temperature = (User.user_temperature - 32) * (5/9) + 273.15
 
-    expected_condition = models.model.predict([
+    expected_condition = models.model.predict([[
         user_datetime, user_temperature, User.user_pressure,
-        User.user_wind_direction])[0]
+        User.user_wind_direction]])[0]
 
     if show:
         print(f"{models.condition} in NYC on {User.user_datetime}: "
@@ -268,7 +268,8 @@ def main() -> None:
         User.user_datetime = input('Enter datetime (mm/dd/YYYY H): ')
         User.user_temperature = int(input('Enter temperature (\u00b0F): '))
         User.user_pressure = int(input('Enter pressure (hPa): '))
-        User.user_wind_direction = int(input('Enter wind direction (0-360): '))
+        User.user_wind_direction = int(input('Enter wind direction (0-360):'))
+        print()
 
     models_clear = Models(condition=Condition.CLEAR_SKIES.value)
     models_rain = Models(condition=Condition.RAIN.value)
