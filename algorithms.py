@@ -47,9 +47,9 @@ class Models:
     user_pressure: str = None
     user_wind_direction: str = None
 
-    def set_X_y(self, x_y) -> None:
+    def set_X_y(self, x, y) -> None:
         """Sets the data for X and y"""
-        self.X, self.y = x_y
+        self.X, self.y = x, y
 
     def get_model_and_test_data(self) -> tuple:
         """Gets the model and test data to be used for analysis"""
@@ -108,10 +108,8 @@ class Models:
             self.model = joblib.load(os.path.join('models', f"{name}.joblib"))
 
 
-def get_data(models: Models) -> tuple:
-    """Gets the dataset and returns 'X' and 'y' for analysis"""
-
-    Numerics = LabelEncoder()
+def read_weather_data() -> tuple:
+    """Reads the weather data from disk and returns 'X' and 'y' for analysis"""
 
     # Independent variables
     temperature = pd.read_csv(os.path.join('dataset', 'temperature.csv'))
@@ -126,6 +124,8 @@ def get_data(models: Models) -> tuple:
     temperature['datetime'] = temperature['datetime'].apply(
         lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S').strftime('%j-%H'))
 
+    Numerics = LabelEncoder()
+
     # NYC data
     nyc = temperature.copy()[['datetime', 'New York']]
     nyc.rename(columns={'datetime': 'Datetime', 'New York': 'Temperature'},
@@ -138,6 +138,12 @@ def get_data(models: Models) -> tuple:
 
     X = nyc.drop(columns=['Weather Description'])
     y = nyc['Weather Description'].copy()
+
+    return X, y
+
+
+def divide_y(models: Models, y: pd.DataFrame) -> pd.DataFrame:
+    """Splits y into multiple data sets for better accuracy"""
 
     if models.condition == Condition.CLEAR_SKIES.value:
         y[~y.str.contains('sky is clear')] = 'cloudy'
@@ -167,7 +173,7 @@ def get_data(models: Models) -> tuple:
     elif models.condition == Condition.FOG.value:
         y[~y.isin({'fog', 'mist', 'haze', 'smoke'})] = 'no fog'
 
-    return X, y
+    return y
 
 
 def split_data(x, y) -> tuple:
@@ -263,15 +269,12 @@ def main() -> None:
     models_snow = Models(condition=Condition.SNOW.value)
     models_fog = Models(condition=Condition.FOG.value)
 
-    print("\nTraining models...\n")
-
-    models_clear.set_X_y(get_data(models_clear))
-    models_rain.set_X_y(get_data(models_rain))
-    models_thunderstorm.set_X_y(get_data(models_thunderstorm))
-    models_snow.set_X_y(get_data(models_snow))
-    models_fog.set_X_y(get_data(models_fog))
-
-    print("Running models...\n")
+    X, y = read_weather_data()
+    models_clear.set_X_y(X, divide_y(models_clear, y.copy()))
+    models_rain.set_X_y(X, divide_y(models_rain, y.copy()))
+    models_thunderstorm.set_X_y(X, divide_y(models_thunderstorm, y.copy()))
+    models_snow.set_X_y(X, divide_y(models_snow, y.copy()))
+    models_fog.set_X_y(X, divide_y(models_fog, y.copy()))
 
     run(models_clear, show=show, train=train, export=export)
     run(models_rain, show=show, train=train, export=export)
