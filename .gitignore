@@ -131,6 +131,5 @@ dmypy.json
 # Custom
 test.py
 test2.py
-music.csv
-music-recommender.joblib
 *.dot
+*.joblib
