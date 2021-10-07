@@ -215,8 +215,8 @@ def prediction(models: Models, show=False) -> float:
         User.user_wind_direction]])[0]
 
     if show:
-        print(f"{models.condition} in NYC on {User.user_datetime}: "
-              f"{expected_condition.capitalize()} (Using {models.model_name})")
+        print(f"{models.condition} in NYC on {User.user_datetime}:00 ~~~ "
+              f"{expected_condition.capitalize()}")
 
     return expected_condition
 
@@ -265,10 +265,10 @@ def main() -> None:
     export = False  # Requires train
 
     if not train:
-        User.user_datetime = input('Enter datetime (mm/dd/YYYY H): ')
+        User.user_datetime = input('Enter datetime (mm/dd/YYYY HH): ')
         User.user_temperature = int(input('Enter temperature (\u00b0F): '))
         User.user_pressure = int(input('Enter pressure (hPa): '))
-        User.user_wind_direction = int(input('Enter wind direction (0-360):'))
+        User.user_wind_direction = int(input('Enter wind direction (0-360): '))
         print()
 
     models_clear = Models(condition=Condition.CLEAR_SKIES.value)
@@ -289,6 +289,11 @@ def main() -> None:
     run(models_thunderstorm, show=show, train=train, export=export)
     run(models_snow, show=show, train=train, export=export)
     run(models_fog, show=show, train=train, export=export)
+
+    if train:
+        print(f"\n--- Used {models_clear.model_name} for training ---")
+    else:
+        print(f"\n--- Used {models_clear.model_name} for predictions ---")
 
 
 if __name__ == '__main__':
