@@ -1,6 +1,6 @@
 # Weather Prediction using Machine Learning
 
-Predict the weather conditions of a day in NYC or other large cities using various machine learning algorithms. Observe the accuracy of each model as well as use any to predict the weather conditions with a few input values. Prediction is split into 5 categories:
+Predict the weather conditions of a day in NYC or other large cities using various machine learning algorithms. Observe the accuracy of each model in all categories of weather conditions. Prediction is split into 5 categories:
 
 * Sky - Clear vs Cloudy
 * Rain
@@ -9,6 +9,14 @@ Predict the weather conditions of a day in NYC or other large cities using vario
 * Fog - Mist and Haze included
 
 This split allows the models to be properly fitted to a single feature rather than overextending themselves too thin.
+
+Prediction requires four input values from the user:
+* Date
+* Temperature
+* Pressure
+* Wind Direction
+
+This four gives the best accuracy across all models tested. Any less or more increases the error of the predictions.
 
 Models were trained on data from: https://www.kaggle.com/selfishgene/historical-hourly-weather-data?select=weather_description.csv.
 
