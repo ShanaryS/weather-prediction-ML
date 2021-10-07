@@ -123,9 +123,6 @@ def get_data(models: Models) -> tuple:
         os.path.join('dataset', 'weather_description.csv'))
 
     # Converting datetime to day of year and hour of day
-    # TODO Look into this more. Maybe account for changing years? Maybe not
-    #  since you want to use previous years data a data point for new
-    #  datetime that's being entered.
     temperature['datetime'] = temperature['datetime'].apply(
         lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S').strftime('%j-%H'))
 
@@ -249,7 +246,7 @@ def run(models: Models, show=False, train=False, export=False) -> None:
         models.user_wind_direction = input('Enter wind direction (0-360): ')
         prediction(models, show=show)
     if export:
-        export_model(models)  # Requires train = True
+        export_model(models)
         # export_graphviz_dot(models)
 
 
@@ -257,8 +254,8 @@ def main() -> None:
     """Main function"""
 
     show = True
-    train = True
-    export = True
+    train = False
+    export = False  # Requires train
 
     models_clear = Models(condition=Condition.CLEAR_SKIES.value)
     models_rain = Models(condition=Condition.RAIN.value)
