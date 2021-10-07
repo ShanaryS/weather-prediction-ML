@@ -18,3 +18,47 @@ Model is currently trained on NYC but can be easily swapped with other cities fr
 Accuracy of some of the models used:             |  Example of weather pridiction:
 :-------------------------:|:-------------------------:
 ![Demo #1](https://user-images.githubusercontent.com/86130442/136312320-af8db059-1023-496f-a38e-acb7b1fb61d2.png)  |  ![Demo #2](https://user-images.githubusercontent.com/86130442/136312326-aa2d2383-c938-4b73-89df-b0ed73113e10.png)
+
+## Installation
+
+Clone this repo and cd into it:
+
+```bash
+git clone https://github.com/ShanaryS/weather-prediction-ML.git
+cd weather-prediction-ML
+```
+
+Create and activate your virtual environment:
+
+* Windows:
+```bash
+virtualenv env
+.\env\Scripts\activate
+```
+
+* MacOS/Linux:
+```bash
+virtualenv --no-site-packages env
+source env/bin/activate
+```
+
+Install the required packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+# Usage
+
+* Train Models:
+```bash
+python run_training
+```
+
+* Predict Weather:
+```bash
+python run_prediction
+```
+
+## License
+[MIT](https://github.com/ShanaryS/algorithm-visualizer/blob/main/LICENSE)
