@@ -11,6 +11,7 @@ Predict the weather conditions of a day in NYC or other large cities using vario
 This split allows the models to be properly fitted to a single feature rather than overextending themselves too thin.
 
 Models were trained on data from: https://www.kaggle.com/selfishgene/historical-hourly-weather-data?select=weather_description.csv.
+
 Model is currently trained on NYC but can be easily swapped with other cities from the dataset.
 
 ***
