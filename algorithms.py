@@ -1,3 +1,5 @@
+"""Contains the models used for training and prediction"""
+
 import os.path
 import joblib
 from dataclasses import dataclass
@@ -253,12 +255,8 @@ def run(models: Models, show=False, train=False, export=False) -> None:
         # export_graphviz_dot(models)
 
 
-def main() -> None:
+def main(show=False, train=False, export=False) -> None:
     """Main function"""
-
-    show = True
-    train = False
-    export = False  # Requires train
 
     if not train:
         User.user_datetime = input('Enter datetime (mm/dd/YYYY): ')
@@ -289,7 +287,3 @@ def main() -> None:
 
     if not train:
         print(f"\n--- Used {models_clear.model_name} for predictions ---")
-
-
-if __name__ == '__main__':
-    main()
