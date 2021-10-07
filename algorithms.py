@@ -26,6 +26,16 @@ class Condition(Enum):
 
 
 @dataclass
+class User:
+    """Contains user inputs"""
+
+    user_datetime: str = None
+    user_temperature: int = None
+    user_pressure: int = None
+    user_wind_direction: int = None
+
+
+@dataclass
 class Models:
     """Different models for analyzing data"""
 
@@ -40,12 +50,6 @@ class Models:
     # Test data used to compare accuracy with
     X_test: any = None
     y_test: any = None
-
-    # Stores user input
-    user_datetime: str = None
-    user_temperature: str = None
-    user_pressure: str = None
-    user_wind_direction: str = None
 
     def set_X_y(self, x, y) -> None:
         """Sets the data for X and y"""
@@ -201,16 +205,17 @@ def prediction(models: Models, show=False) -> float:
     Numerics = LabelEncoder()
 
     user_datetime = datetime.strptime(
-        models.user_datetime, '%m/%d/%Y %H').strftime('%j-%H')
+        User.user_datetime, '%m/%d/%Y %H').strftime('%j-%H')
     user_datetime = Numerics.fit_transform(user_datetime)
 
+    user_temperature = (User.user_temperature - 32) * (5/9) + 273.15
+
     expected_condition = models.model.predict([
-        user_datetime, models.user_temperature, models.user_pressure,
-        models.user_wind_direction
-    ])[0]
+        user_datetime, user_temperature, User.user_pressure,
+        User.user_wind_direction])[0]
 
     if show:
-        print(f"{models.condition} in NYC on {models.user_datetime}: "
+        print(f"{models.condition} in NYC on {User.user_datetime}: "
               f"{expected_condition.capitalize()} (Using {models.model_name})")
 
     return expected_condition
@@ -246,10 +251,6 @@ def run(models: Models, show=False, train=False, export=False) -> None:
     if train:
         _ = get_accuracy(models, show=show)
     else:
-        models.user_datetime = input('Enter datetime (mm/dd/YYYY H): ')
-        models.user_temperature = input('Enter temperature (\u00b0F): ')
-        models.user_pressure = input('Enter pressure (hPa): ')
-        models.user_wind_direction = input('Enter wind direction (0-360): ')
         prediction(models, show=show)
     if export:
         export_model(models)
@@ -262,6 +263,12 @@ def main() -> None:
     show = True
     train = False
     export = False  # Requires train
+
+    if not train:
+        User.user_datetime = input('Enter datetime (mm/dd/YYYY H): ')
+        User.user_temperature = int(input('Enter temperature (\u00b0F): '))
+        User.user_pressure = int(input('Enter pressure (hPa): '))
+        User.user_wind_direction = int(input('Enter wind direction (0-360): '))
 
     models_clear = Models(condition=Condition.CLEAR_SKIES.value)
     models_rain = Models(condition=Condition.RAIN.value)
