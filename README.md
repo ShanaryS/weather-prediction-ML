@@ -11,10 +11,10 @@ Predict the weather conditions of a day in NYC or other large cities using vario
 This split allows the models to be properly fitted to a single feature rather than overextending themselves too thin.
 
 Prediction requires four input values from the user:
-* Date
-* Temperature
-* Pressure
-* Wind Direction
+* Date to predict
+* Current Temperature
+* Current Pressure
+* Current Wind Direction
 
 This four gives the best accuracy across all models tested. Any less or more increases the error of the predictions.
 
