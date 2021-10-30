@@ -71,7 +71,7 @@ class Models:
         else:
             name = self.model_name.lower().replace(' ', '_')
             name += '_' + self.condition.lower().replace(' ', '_')
-            self.model = joblib.load(os.path.join('models', f"{name}.joblib"))
+            self.model = joblib.load(os.path.join('../models', f"{name}.joblib"))
 
     def k_neighbours_classifier(self) -> None:
         """ML model of K Neighbours Classifier"""
@@ -84,7 +84,7 @@ class Models:
         else:
             name = self.model_name.lower().replace(' ', '_')
             name += '_' + self.condition.lower().replace(' ', '_')
-            self.model = joblib.load(os.path.join('models', f"{name}.joblib"))
+            self.model = joblib.load(os.path.join('../models', f"{name}.joblib"))
 
     def decision_tree_classifier(self) -> None:
         """ML model of Decision Tree Classifier"""
@@ -97,7 +97,7 @@ class Models:
         else:
             name = self.model_name.lower().replace(' ', '_')
             name += '_' + self.condition.lower().replace(' ', '_')
-            self.model = joblib.load(os.path.join('models', f"{name}.joblib"))
+            self.model = joblib.load(os.path.join('../models', f"{name}.joblib"))
 
     def gaussian_nb(self) -> None:
         """ML model of GaussianNB"""
@@ -110,20 +110,20 @@ class Models:
         else:
             name = self.model_name.lower().replace(' ', '_')
             name += '_' + self.condition.lower().replace(' ', '_')
-            self.model = joblib.load(os.path.join('models', f"{name}.joblib"))
+            self.model = joblib.load(os.path.join('../models', f"{name}.joblib"))
 
 
 def read_weather_data() -> tuple:
     """Reads the weather data from disk and returns 'X' and 'y' for analysis"""
 
     # Independent variables
-    temperature = pd.read_csv(os.path.join('dataset', 'temperature.csv'))
-    pressure = pd.read_csv(os.path.join('dataset', 'pressure.csv'))
-    wind_direction = pd.read_csv(os.path.join('dataset', 'wind_direction.csv'))
+    temperature = pd.read_csv(os.path.join('../dataset', 'temperature.csv'))
+    pressure = pd.read_csv(os.path.join('../dataset', 'pressure.csv'))
+    wind_direction = pd.read_csv(os.path.join('../dataset', 'wind_direction.csv'))
 
     # Dependent variable
     weather_description = pd.read_csv(
-        os.path.join('dataset', 'weather_description.csv'))
+        os.path.join('../dataset', 'weather_description.csv'))
 
     # Converting datetime to day of year and hour of day
     temperature['datetime'] = temperature['datetime'].apply(
@@ -224,7 +224,7 @@ def export_model(models: Models) -> None:
 
     name = models.model_name.lower().replace(' ', '_')
     name += '_' + models.condition.lower().replace(' ', '_')
-    joblib.dump(models.model, os.path.join('models', f"{name}.joblib"))
+    joblib.dump(models.model, os.path.join('../models', f"{name}.joblib"))
 
 
 def export_graphviz_dot(models: Models) -> None:

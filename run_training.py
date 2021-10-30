@@ -1,12 +1,12 @@
 """Use to train the models"""
 
-from algorithms import main as _main
+from src.algorithms import main as main_
 
 
 def main() -> None:
     """Main function"""
 
-    _main(show=True, train=True, export=True)
+    main_(show=True, train=True, export=True)
 
 
 if __name__ == '__main__':

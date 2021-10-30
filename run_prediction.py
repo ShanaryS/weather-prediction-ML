@@ -1,12 +1,12 @@
 """Use to run predictions with the models"""
 
-from algorithms import main as _main
+from src.algorithms import main as main_
 
 
 def main() -> None:
     """Main function"""
 
-    _main(show=True, train=False, export=False)
+    main_(show=True, train=False, export=False)
 
 
 if __name__ == '__main__':
